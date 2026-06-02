@@ -1059,7 +1059,7 @@ function formatDate(dateStr) {
 }
 
 // ============================================================
-// INVOICE PREVIEW GENERATOR
+// INVOICE PREVIEW GENERATOR (UPGRADED TO PREVENT WRAPPING & ENSURE PROPER COLUMN WIDTHS)
 // ============================================================
 function generateInvoiceHTML() {
   const invId = document.getElementById('inv-id').value || 'INV-0001';
@@ -1134,16 +1134,19 @@ function generateInvoiceHTML() {
     const pkg = PRESET_PACKAGES.find(x => x.id === p.packageId);
     const displayPackageName = pkg ? (pkg.id === 'custom' ? mangoName : `${mangoName} (${pkg.name})`) : mangoName;
     const itemDiscountStr = p.discountPercent > 0 ? `${p.discountPercent}%` : '—';
-    const finalRate = p.rate ? Math.round(p.rate) : 0;
+    
+    // If it is a Preset Package, hide the Rate/KG calculation. Only show it on Custom Packages!
+    const isPresetPkg = p.packageId !== 'custom';
+    const finalRateDisplay = isPresetPkg ? '—' : `৳ ${p.rate ? Math.round(p.rate) : 0}`;
 
     return `
       <tr>
-        <td style="font-weight:600; color:#57534E;">${i+1}</td>
-        <td style="font-weight:700; color:#14532D;">${displayPackageName}</td>
-        <td style="text-align:right;">${parseFloat(p.weight||0).toFixed(2)} KG</td>
-        <td style="text-align:right;">৳ ${finalRate}</td>
-        <td style="text-align:right; color:#D97706; font-weight:600;">${itemDiscountStr}</td>
-        <td style="text-align:right; font-weight:700; color:#166534;">৳ ${(p.total||0).toFixed(2)}</td>
+        <td style="text-align:center; font-weight:600; color:#57534E;">${i+1}</td>
+        <td style="font-weight:700; color:#14532D; text-align:left;">${displayPackageName}</td>
+        <td style="text-align:right; white-space:nowrap;">${parseFloat(p.weight||0).toFixed(2)} KG</td>
+        <td style="text-align:right; white-space:nowrap;">${finalRateDisplay}</td>
+        <td style="text-align:right; color:#D97706; font-weight:600; white-space:nowrap;">${itemDiscountStr}</td>
+        <td style="text-align:right; font-weight:700; color:#166534; white-space:nowrap;">৳ ${(p.total||0).toFixed(2)}</td>
       </tr>
     `;
   }).join('');
@@ -1189,18 +1192,18 @@ function generateInvoiceHTML() {
       </div>
     </div>
 
-    <!-- PRODUCTS TABLE -->
+    <!-- PRODUCTS TABLE (UPDATED FOR PERFECT COLUMN WIDTHS & NO-WRAP PRESERVATION) -->
     <div style="padding:0 40px; margin-top:20px;">
       <div style="font-size:11px; font-weight:800; color:#16A34A; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; line-height:16px;">Order Items</div>
-      <table class="inv-table" style="width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden;">
+      <table class="inv-table" style="width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden; table-layout:fixed;">
         <thead>
           <tr>
-            <th style="width:30px;">#</th>
-            <th>Product Name</th>
-            <th style="text-align:right;">Weight</th>
-            <th style="text-align:right;">Rate/KG</th>
-            <th style="text-align:right; width:80px;">Discount</th>
-            <th style="text-align:right; width:110px;">Total</th>
+            <th style="width:40px; text-align:center;">#</th>
+            <th style="text-align:left;">Product Name</th>
+            <th style="text-align:right; width:100px; white-space:nowrap;">Weight</th>
+            <th style="text-align:right; width:90px; white-space:nowrap;">Rate/KG</th>
+            <th style="text-align:right; width:80px; white-space:nowrap;">Discount</th>
+            <th style="text-align:right; width:110px; white-space:nowrap;">Total</th>
           </tr>
         </thead>
         <tbody>
