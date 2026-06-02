@@ -512,15 +512,15 @@
           </div>
           <div>
             <label class="new-label">Phone Number</label>
-            <input type="tel" id="cust-phone" class="new-input" placeholder="—" value="" oninput="updatePreview()">
+            <input type="tel" id="cust-phone" class="new-input" placeholder="Phone Number" value="" oninput="updatePreview()">
           </div>
         </div>
         <div>
           <label class="new-label">Full Address</label>
-          <textarea id="cust-address" rows="2" class="new-input" placeholder="—" oninput="updatePreview()"></textarea>
+          <textarea id="cust-address" rows="2" class="new-input" placeholder="Full Address..." oninput="updatePreview()"></textarea>
         </div>
         
-        <!-- IMPROVED SEARCHABLE DISTRICT SELECTOR (FIXED FOR DESKTOP & MOBILE) -->
+        <!-- SEARCHABLE DISTRICT SELECTOR -->
         <div>
           <label class="new-label">Select or Type Area (District)</label>
           <div class="relative" id="district-dropdown-wrapper">
@@ -741,9 +741,9 @@ const MANGO_TYPES = [
 const PRESET_PACKAGES = [
   { id: 'custom', name: 'Custom Package (কাস্টম প্যাকেজ)', weight: 0.00, rate: 0, text: 'Custom' },
   { id: 'pkg1', name: 'Package 01 (10 কেজি আম)', weight: 10.00, rate: 140, text: 'Package 01: 10 KG - 1400 ৳' },
-  { id: 'pkg2', name: 'Package 02 (20 কেজি + ২ কেজি ফ্রি)', weight: 22.00, rate: 118.18, text: 'Package 02: 20 KG (+ 2 KG Free) - 2600 ৳' },
-  { id: 'pkg3', name: 'Package 03 (25 কেজি + ২ কেজি ফ্রি)', weight: 27.00, rate: 111.11, text: 'Package 03: 25 KG (+ 2 KG Free) - 3000 ৳' },
-  { id: 'pkg4', name: 'Package 04 (50 কেজি + ২ কেজি ফ্রি)', weight: 52.00, rate: 105.77, text: 'Package 04: 50 KG (+ 2 KG Free) - 5500 ৳' }
+  { id: 'pkg2', name: 'Package 02 (20 কেজি + ২ কেজি ফ্রি)', weight: 22.00, rate: 130, text: 'Package 02: 20 KG (+ 2 KG Free) - 2600 ৳' },
+  { id: 'pkg3', name: 'Package 03 (25 কেজি + ২ কেজি ফ্রি)', weight: 27.00, rate: 120, text: 'Package 03: 25 KG (+ 2 KG Free) - 3000 ৳' },
+  { id: 'pkg4', name: 'Package 04 (50 কেজি + ২ কেজি ফ্রি)', weight: 52.00, rate: 110, text: 'Package 04: 50 KG (+ 2 KG Free) - 5500 ৳' }
 ];
 
 const DISTRICTS = [
@@ -856,7 +856,7 @@ function selectDistrict(val) {
 }
 
 // ============================================================
-// PRODUCTS CONTROLLER (UPGRADED TO FIX LOSS OF FOCUS/TYPING BUG)
+// PRODUCTS CONTROLLER
 // ============================================================
 function addProduct() {
   const id = Date.now();
@@ -1007,12 +1007,23 @@ function updateProduct(id, field, value) {
     p[field] = value;
   }
 
-  // Calculate row total: Total = (Weight * Rate) * (1 - Discount%/100)
-  const weightVal = parseFloat(p.weight) || 0;
-  const rateVal = parseFloat(p.rate) || 0;
+  // FIXED CALCULATION LOGIC: Use exact round presets for Packages, only use math multiplication for Custom Package!
+  let basePrice = 0;
+  if (p.packageId === 'pkg1') {
+    basePrice = 1400;
+  } else if (p.packageId === 'pkg2') {
+    basePrice = 2600;
+  } else if (p.packageId === 'pkg3') {
+    basePrice = 3000;
+  } else if (p.packageId === 'pkg4') {
+    basePrice = 5500;
+  } else {
+    const weightVal = parseFloat(p.weight) || 0;
+    const rateVal = parseFloat(p.rate) || 0;
+    basePrice = weightVal * rateVal;
+  }
+
   const discVal = parseFloat(p.discountPercent) || 0;
-  
-  const basePrice = weightVal * rateVal;
   p.total = basePrice * (1 - (discVal / 100));
 
   // Directly update row total field in UI to preserve focus
@@ -1021,7 +1032,7 @@ function updateProduct(id, field, value) {
     totalInput.value = p.total ? p.total.toFixed(2) : '0.00';
   }
 
-  // Toggle Visibility of Custom Variety Div without completely re-rendering the list
+  // Toggle Visibility of Custom Variety Div
   if (field === 'mangoType') {
     const customDiv = document.getElementById(`custom-mango-div-${id}`);
     if (customDiv) {
@@ -1059,7 +1070,7 @@ function formatDate(dateStr) {
 }
 
 // ============================================================
-// INVOICE PREVIEW GENERATOR (UPGRADED TO PREVENT WRAPPING & ENSURE PROPER COLUMN WIDTHS)
+// INVOICE PREVIEW GENERATOR
 // ============================================================
 function generateInvoiceHTML() {
   const invId = document.getElementById('inv-id').value || 'INV-0001';
@@ -1192,7 +1203,7 @@ function generateInvoiceHTML() {
       </div>
     </div>
 
-    <!-- PRODUCTS TABLE (UPDATED FOR PERFECT COLUMN WIDTHS & NO-WRAP PRESERVATION) -->
+    <!-- PRODUCTS TABLE -->
     <div style="padding:0 40px; margin-top:20px;">
       <div style="font-size:11px; font-weight:800; color:#16A34A; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; line-height:16px;">Order Items</div>
       <table class="inv-table" style="width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden; table-layout:fixed;">
