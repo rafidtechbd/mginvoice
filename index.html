@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16A34A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MG Invoice">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Mango Invoice System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --mango-gold: #F59E0B;
+    --mango-deep: #D97706;
+    --green-fresh: #16A34A;
+    --green-dark: #14532D;
+    --green-mid: #166534;
+    --cream: #FFFBEB;
+    --ink: #1C1917;
+    --muted: #78716C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', 'Noto Sans Bengali', sans-serif;
+    background: #F0FDF4;
+    min-height: 100vh;
+  }
+
+  .bengali { font-family: 'Noto Sans Bengali', sans-serif; }
+  .display { font-family: 'Playfair Display', serif; }
+
+  /* === FORM REDESIGN STYLES === */
+  .new-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #E5E7EB;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+
+  .new-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #F3F4F6;
+    padding-bottom: 14px;
+  }
+
+  .new-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .icon-box-company { background-color: #ECFDF5; color: #16A34A; }
+  .icon-box-customer { background-color: #F3F4F6; color: #4B5563; }
+  .icon-box-delivery { background-color: #ECFDF5; color: #16A34A; }
+  .icon-box-payment { background-color: #FFFBEB; color: #D97706; }
+  .icon-box-products { background-color: #EEF2F6; color: #4F46E5; }
+  .icon-box-terms { background-color: #F3F4F6; color: #4B5563; }
+
+  .new-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1F2937;
+  }
+
+  .new-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+
+  .new-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #D1D5DB;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1F2937;
+    background-color: #FFFFFF;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  .new-input:focus {
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  .new-input::placeholder {
+    color: #9CA3AF;
+  }
+
+  /* Custom Select Dropdown with Arrow */
+  .new-select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .new-select {
+    width: 100%;
+    padding: 10px 36px 10px 14px;
+    border: 1px solid #D1D5DB;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1F2937;
+    background-color: #FFFFFF;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  .new-select:focus {
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  .new-select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6B7280;
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Styled Readonly Preview Boxes */
+  .readonly-box {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    color: #374151;
+    font-weight: 500;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  .net-payable-box {
+    background-color: #ECFDF5;
+    border: 1px solid #A7F3D0;
+    color: #065F46;
+    font-weight: 700;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Logo Upload UI */
+  .logo-upload-box {
+    border: 2px dashed #86EFAC;
+    background: #F8FFF9;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .logo-upload-box:hover { border-color: #16A34A; background: #F0FDF4; }
+  #logo-preview-img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; border: 1px solid #D1FAE5; display: none; }
+  .logo-placeholder { width: 60px; height: 60px; background: #DCFCE7; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #16A34A 0%, #14532D 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,0.35); }
+
+  .btn-secondary {
+    background: white;
+    color: #16A34A;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: 2px solid #16A34A;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-secondary:hover { background: #F0FDF4; }
+
+  .btn-danger {
+    background: #FEE2E2;
+    color: #DC2626;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .btn-danger:hover { background: #DC2626; color: white; }
+
+  /* === INVOICE PREVIEW === */
+  #invoice-preview {
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    font-family: 'DM Sans', 'Noto Sans Bengali', sans-serif;
+    color: #1C1917;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .inv-header {
+    background: linear-gradient(135deg, #14532D 0%, #15803D 50%, #16A34A 100%);
+    padding: 30px 40px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .inv-company-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 32px;
+    margin-bottom: 4px;
+  }
+
+  .inv-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    line-height: 48px;
+    margin-bottom: 5px;
+    text-align: right;
+  }
+
+  .inv-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 2px solid #ECFDF5;
+  }
+
+  .inv-meta-box {
+    padding: 20px 40px;
+    border-right: 1px solid #ECFDF5;
+  }
+
+  .inv-meta-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #16A34A;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 14px;
+  }
+
+  .inv-table th {
+    background: linear-gradient(135deg, #14532D, #16A34A);
+    color: white;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    line-height: 16px;
+    vertical-align: middle;
+  }
+
+  .inv-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #ECFDF5;
+    vertical-align: middle;
+    line-height: 20px;
+  }
+
+  .inv-table tr:nth-child(even) td { background: #F0FDF4; }
+
+  .inv-summary {
+    background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+    border-left: 3px solid #16A34A;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 14px;
+  }
+  .status-paid { background: #DCFCE7; color: #166534; }
+  .status-partial { background: #FEF9C3; color: #854D0E; }
+  .status-unpaid { background: #FEE2E2; color: #991B1B; }
+  .status-pending { background: #F3F4F6; color: #374151; }
+  .status-processing { background: #DBEAFE; color: #1E40AF; }
+  .status-delivered { background: #DCFCE7; color: #166534; }
+
+  .inv-footer {
+    background: linear-gradient(135deg, #14532D, #16A34A);
+    color: white;
+    padding: 16px 40px;
+    text-align: center;
+    font-size: 12px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 18px;
+  }
+
+  /* Icons */
+  .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Responsive Previews */
+  .preview-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    background: linear-gradient(135deg, #16A34A, #14532D);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(22,163,74,0.4);
+  }
+  .preview-panel-mobile { display: none; }
+
+  @media (max-width: 1024px) {
+    .preview-toggle { display: flex; align-items: center; gap: 8px; }
+    .desktop-preview { display: none; }
+    .preview-panel-mobile.show {
+      display: block; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6); overflow-y: auto; padding: 20px;
+    }
+    .preview-close {
+      display: block; position: fixed; top: 16px; right: 16px; z-index: 201;
+      background: white; border: none; border-radius: 50%; width: 40px; height: 40px;
+      font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #invoice-preview, #invoice-preview * { visibility: visible; }
+    #invoice-preview {
+      position: fixed !important; top: 0; left: 0;
+      width: 210mm !important; min-height: 297mm !important;
+      margin: 0 !important; padding: 0 !important; box-shadow: none !important;
+    }
+    @page { size: A4; margin: 0; }
+  }
+
+  .top-nav {
+    background: linear-gradient(135deg, #14532D 0%, #15803D 100%);
+    padding: 0 24px; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 12px rgba(20,83,45,0.3);
+  }
+  .tab-btn {
+    padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .tab-btn.active { background: white; color: #16A34A; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .tab-btn:not(.active) { background: transparent; color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+  <div class="flex items-center gap-3">
+    <div style="background: rgba(255,255,255,0.2); padding: 6px; border-radius: 8px; font-size: 24px; line-height: 1; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+      🥭
+    </div>
+    <div>
+      <div class="display text-white font-bold text-lg leading-tight">Mango Invoice</div>
+      <div class="text-green-300 text-xs">Professional Billing System</div>
+    </div>
+  </div>
+  <div class="flex gap-2" id="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('form')">Form</button>
+    <button class="tab-btn" onclick="showTab('preview')">Preview</button>
+  </div>
+</nav>
+
+<!-- MAIN LAYOUT -->
+<div class="flex h-full" style="min-height:calc(100vh - 60px);">
+
+  <!-- LEFT: FORM -->
+  <div class="w-full lg:w-1/2 overflow-y-auto p-4 lg:p-6" id="form-panel" style="max-height:calc(100vh - 60px);">
+    
+    <!-- Invoice ID & Date -->
+    <div class="new-card" style="padding: 16px 20px; display: flex; gap: 16px; align-items: center;">
+      <div style="flex: 1;">
+        <label class="new-label">Invoice No</label>
+        <input type="text" id="inv-id" class="new-input" value="INV-MANGO-10013" oninput="updatePreview()" style="font-weight: bold; color: #166534;">
+      </div>
+      <div style="flex: 1;">
+        <label class="new-label">Invoice Date</label>
+        <input type="date" id="inv-date" class="new-input" value="2026-05-21" oninput="updatePreview()">
+      </div>
+    </div>
+
+    <!-- COMPANY INFO (FITTED TO IMAGE 1 BY DEFAULT) -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-company">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <div class="new-section-title">Company Information</div>
+      </div>
+      
+      <!-- Logo Upload -->
+      <div class="mb-4">
+        <label class="new-label">Company Logo (Optional)</label>
+        <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+        <div class="logo-upload-box" onclick="document.getElementById('logo-input').click()">
+          <div class="logo-placeholder" id="logo-placeholder">
+            <svg class="icon" style="color:#16A34A;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <img id="logo-preview-img" src="" alt="Logo">
+          <div>
+            <div class="text-sm font-bold text-green-900">Upload Company Logo</div>
+            <div class="text-xs text-stone-500">PNG, JPG format. Ideal size: 150x80px</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="new-label">Company / Shop Name</label>
+          <input type="text" id="company-name" class="new-input" placeholder="e.g. Father's food" value="Father's food" oninput="updatePreview()">
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="new-label">Phone Number</label>
+            <input type="tel" id="company-phone" class="new-input" value="+880 1997-772803" oninput="updatePreview()">
+          </div>
+          <div>
+            <label class="new-label">Email Address</label>
+            <input type="email" id="company-email" class="new-input" placeholder="fathersfoodltd@gmail.com" value="fathersfoodltd@gmail.com" oninput="updatePreview()">
+          </div>
+          <div>
+            <label class="new-label">bKash / Nagad Number</label>
+            <input type="tel" id="company-bkash" class="new-input" placeholder="01997-772803" value="01997-772803" oninput="updatePreview()">
+          </div>
+          <div>
+            <label class="new-label">Address</label>
+            <input type="text" id="company-address" class="new-input" value="রাজশাহী, বাংলাদেশ" oninput="updatePreview()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMER INFO -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-customer">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <div class="new-section-title">Customer Information</div>
+      </div>
+      <div class="grid grid-cols-1 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="new-label">Customer Name</label>
+            <input type="text" id="cust-name" class="new-input" placeholder="Customer Name" value="Customer Name" oninput="updatePreview()">
+          </div>
+          <div>
+            <label class="new-label">Phone Number</label>
+            <input type="tel" id="cust-phone" class="new-input" placeholder="—" value="—" oninput="updatePreview()">
+          </div>
+        </div>
+        <div>
+          <label class="new-label">Full Address</label>
+          <textarea id="cust-address" rows="2" class="new-input" placeholder="—" oninput="updatePreview()">—</textarea>
+        </div>
+        
+        <!-- IMPROVED SEARCHABLE DISTRICT SELECTOR (FIXED FOR DESKTOP & MOBILE) -->
+        <div>
+          <label class="new-label">Select or Type Area (District)</label>
+          <div class="relative" id="district-dropdown-wrapper">
+            <input type="text" id="cust-area" class="new-input" placeholder="Type district name..." oninput="filterDistricts(this.value); updatePreview();" onfocus="showDistricts()" style="padding-right:36px;">
+            <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;fill:none;stroke:#16A34A;stroke-width:2;pointer-events:none;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            
+            <!-- Custom Styled District Dropdown Menu -->
+            <div id="district-list-container" class="hidden absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
+              <!-- populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="new-label">Note (Optional)</label>
+          <input type="text" id="cust-note" class="new-input" placeholder="e.g. ফ্রিজে রাখবেন" oninput="updatePreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- DELIVERY INFO -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-delivery">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+        </div>
+        <div class="new-section-title">Delivery Information</div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="new-label">Courier Name</label>
+          <div class="new-select-wrapper">
+            <select id="courier" class="new-select" oninput="updatePreview()">
+              <option value="Pathao Courier" selected>Pathao Courier</option>
+              <option value="Steadfast Courier">Steadfast Courier</option>
+              <option value="Sundarban Courier">Sundarban Courier</option>
+              <option value="SA Paribahan">SA Paribahan</option>
+              <option value="RedX Courier">RedX Courier</option>
+              <option value="Custom / Other">Custom / Other</option>
+            </select>
+            <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="new-label">Delivery Type</label>
+          <div class="new-select-wrapper">
+            <select id="delivery-type" class="new-select" oninput="updatePreview()">
+              <option value="Home Delivery" selected>Home Delivery</option>
+              <option value="Pickup Point">Pickup Point / Branch</option>
+            </select>
+            <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="new-label">Estimated Delivery Date</label>
+          <input type="date" id="delivery-date" class="new-input" value="2026-05-21" oninput="updatePreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-products">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        </div>
+        <div class="new-section-title">Products (Mango Packages & Discount)</div>
+      </div>
+      <div id="product-list" class="flex flex-col gap-4"></div>
+      <button class="btn-secondary mt-4 w-full" onclick="addProduct()">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add Mango Product / Package
+      </button>
+    </div>
+
+    <!-- PAYMENT & STATUS -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-payment">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
+        <div class="new-section-title">Payment & Status</div>
+      </div>
+
+      <span id="calc-delivery" style="display:none;">0.00</span>
+      <span id="calc-discount-show" style="display:none;">0.00</span>
+      <span id="calc-advance-show" style="display:none;">0.00</span>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="new-label">Subtotal</label>
+          <div class="new-input readonly-box font-bold">
+            ৳ <span id="calc-subtotal" class="ml-1">0.00</span>
+          </div>
+        </div>
+        <div>
+          <label class="new-label">Delivery Fee</label>
+          <input type="number" id="manual-del-fee" class="new-input" placeholder="0" value="0" oninput="recalculate(); updatePreview()">
+        </div>
+        <div>
+          <label class="new-label">Extra Global Discount (৳)</label>
+          <input type="number" id="extra-discount" class="new-input" placeholder="0" value="0" oninput="recalculate(); updatePreview()">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="new-label">Advance Paid</label>
+          <input type="number" id="advance-paid" class="new-input" placeholder="0" value="0" oninput="recalculate(); updatePreview()">
+        </div>
+        <div>
+          <label class="new-label">Net Payable</label>
+          <div class="new-input net-payable-box">
+            ৳ <span id="calc-net" class="ml-1">0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="new-label">Payment Status</label>
+          <div class="new-select-wrapper">
+            <select id="payment-status" class="new-select" onchange="updatePreview()">
+              <option value="Unpaid" selected>Unpaid</option>
+              <option value="Partial">Partial</option>
+              <option value="Paid">Paid</option>
+            </select>
+            <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="new-label">Order Status</label>
+          <div class="new-select-wrapper">
+            <select id="order-status" class="new-select" oninput="updatePreview()">
+              <option value="Pending" selected>Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+            <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMS -->
+    <div class="new-card">
+      <div class="new-section-header">
+        <div class="new-icon-box icon-box-terms">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </div>
+        <div class="new-section-title">Notes & Terms</div>
+      </div>
+      <textarea id="terms-text" rows="3" class="new-input" placeholder="Enter notes..." oninput="updatePreview()">১. পণ্য ডেলিভারির পরে কোনো পরিবর্তন গ্রহণযোগ্য নয়।
+২. যেকোনো সমস্যায় আমাদের সাথে যোগাযোগ করুন।</textarea>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <button onclick="saveInvoice()" style="background:linear-gradient(135deg,#16A34A,#14532D);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+        <svg style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save
+      </button>
+      <button onclick="downloadPNG()" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+        <svg style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> PNG
+      </button>
+      <button onclick="downloadPDF()" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+        <svg style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: PREVIEW (Desktop) -->
+  <div class="hidden lg:flex flex-col w-1/2 bg-stone-100 desktop-preview" style="max-height:calc(100vh - 60px); overflow:hidden;">
+    <div class="bg-white border-b border-stone-200 p-3 flex items-center justify-between" style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5) !important; border-bottom: 2px solid #86EFAC !important;">
+      <span class="text-sm font-semibold flex items-center gap-2" style="color: #14532D;">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Live Preview — A4
+      </span>
+      <div class="flex gap-2">
+        <button class="text-xs py-1.5 px-3" onclick="downloadPNG()" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          <svg style="width:13px;height:13px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> PNG
+        </button>
+        <button class="text-xs py-1.5 px-3" onclick="downloadPDF()" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          <svg style="width:13px;height:13px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-auto p-6 flex justify-center">
+      <div id="preview-scale-wrap" style="transform-origin:top center;">
+        <div id="invoice-preview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE PREVIEW TOGGLE BUTTON -->
+<button class="preview-toggle" id="mobile-preview-btn" onclick="toggleMobilePreview()">
+  <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Preview
+</button>
+
+<!-- MOBILE PREVIEW PANEL -->
+<div class="preview-panel-mobile" id="mobile-preview-panel">
+  <button class="preview-close" onclick="toggleMobilePreview()">✕</button>
+  <div style="overflow:auto; padding-top:50px; display:flex; justify-content:center;">
+    <div id="invoice-preview-mobile" style="transform-origin:top center;"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA & STATE
+// ============================================================
+const MANGO_TYPES = [
+  'Langra (লাংড়া)', 'Himsagar (হিমসাগর)', 'Fazli (ফজলি)', 
+  'Amrapali (আম্রপালি)', 'Khirshapat (ক্ষীরশাপাতি)',
+  'Gopalbhog (গোপালভোগ)', 'Lakshmanbhog (লক্ষ্মণভোগ)',
+  'Mixed Mango', 'Custom'
+];
+
+const PRESET_PACKAGES = [
+  { id: 'custom', name: 'Custom Package (কাস্টম প্যাকেজ)', weight: 0.00, rate: 0, text: 'Custom' },
+  { id: 'pkg1', name: 'Package 01 (10 কেজি আম)', weight: 10.00, rate: 140, text: 'Package 01: 10 KG - 1400 ৳' },
+  { id: 'pkg2', name: 'Package 02 (20 কেজি + ২ কেজি ফ্রি)', weight: 22.00, rate: 118.18, text: 'Package 02: 20 KG (+ 2 KG Free) - 2600 ৳' },
+  { id: 'pkg3', name: 'Package 03 (25 কেজি + ২ কেজি ফ্রি)', weight: 27.00, rate: 111.11, text: 'Package 03: 25 KG (+ 2 KG Free) - 3000 ৳' },
+  { id: 'pkg4', name: 'Package 04 (50 কেজি + ২ কেজি ফ্রি)', weight: 52.00, rate: 105.77, text: 'Package 04: 50 KG (+ 2 KG Free) - 5500 ৳' }
+];
+
+const DISTRICTS = [
+  "Bagerhat", "Bandarban", "Barguna", "Barishal", "Bhola", "Bogra", "Brahmanbaria", "Chandpur", "Chattogram", 
+  "Chuadanga", "Comilla", "Cox's Bazar", "Dhaka", "Dinajpur", "Faridpur", "Feni", "Gaibandha", "Gazipur", 
+  "Gopalganj", "Habiganj", "Jamalpur", "Jashore", "Jhalokati", "Jhenaidah", "Joypurhat", "Khagrachhari", 
+  "Khulna", "Kishoreganj", "Kurigram", "Kushtia", "Lakshmipur", "Lalmonirhat", "Madaripur", "Magura", 
+  "Manikganj", "Meherpur", "Moulvibazar", "Munshiganj", "Mymensingh", "Naogaon", "Narail", "Narayanganj", 
+  "Narsingdi", "Natore", "Nawabganj", "Netrokona", "Nilphamari", "Noakhali", "Pabna", "Panchagarh", 
+  "Patuakhali", "Pirojpur", "Rajbari", "Rajshahi", "Rangamati", "Rangpur", "Satkhira", "Shariatpur", 
+  "Sherpur", "Sirajganj", "Sunamganj", "Sylhet", "Tangail", "Thakurgaon"
+];
+
+let products = [];
+let uploadedLogoSrc = '';
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const initialId = Date.now();
+  products.push({
+    id: initialId,
+    mangoType: 'Langra (লাংড়া)',
+    packageId: 'custom',
+    customMangoType: '',
+    weight: 0.00,
+    rate: 0,
+    discountPercent: 0,
+    total: 0
+  });
+
+  renderProducts();
+  initDistrictDropdown();
+  scalePreview();
+  window.addEventListener('resize', scalePreview);
+  updatePreview();
+});
+
+// ============================================================
+// LOGO UPLOAD
+// ============================================================
+function handleLogoUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedLogoSrc = e.target.result;
+      document.getElementById('logo-preview-img').src = uploadedLogoSrc;
+      document.getElementById('logo-preview-img').style.display = 'block';
+      document.getElementById('logo-placeholder').style.display = 'none';
+      updatePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// ============================================================
+// SEARCHABLE DISTRICT DROPDOWN CONTROLLER
+// ============================================================
+function initDistrictDropdown() {
+  const container = document.getElementById('district-list-container');
+  renderDistrictList(DISTRICTS);
+
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('district-dropdown-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      hideDistricts();
+    }
+  });
+}
+
+function renderDistrictList(list) {
+  const container = document.getElementById('district-list-container');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = `<div class="p-3 text-sm text-gray-500">No districts found</div>`;
+    return;
+  }
+  container.innerHTML = list.map(d => `
+    <div class="px-4 py-2.5 hover:bg-green-50 text-sm text-gray-700 cursor-pointer transition-colors" onclick="selectDistrict('${d}')">
+      ${d}
+    </div>
+  `).join('');
+}
+
+function filterDistricts(query) {
+  const filtered = DISTRICTS.filter(d => d.toLowerCase().includes(query.toLowerCase()));
+  renderDistrictList(filtered);
+  showDistricts();
+}
+
+function showDistricts() {
+  const container = document.getElementById('district-list-container');
+  if (container) container.classList.remove('hidden');
+}
+
+function hideDistricts() {
+  const container = document.getElementById('district-list-container');
+  if (container) container.classList.add('hidden');
+}
+
+function selectDistrict(val) {
+  const input = document.getElementById('cust-area');
+  if (input) {
+    input.value = val;
+  }
+  hideDistricts();
+  updatePreview();
+}
+
+// ============================================================
+// PRODUCTS CONTROLLER (UPGRADED TO FIX LOSS OF FOCUS/TYPING BUG)
+// ============================================================
+function addProduct() {
+  const id = Date.now();
+  products.push({
+    id,
+    mangoType: 'Langra (লাংড়া)',
+    packageId: 'custom',
+    customMangoType: '',
+    weight: 0,
+    rate: 0,
+    discountPercent: 0,
+    total: 0
+  });
+  renderProducts();
+  updatePreview();
+}
+
+function removeProduct(id) {
+  if (products.length === 1) return;
+  products = products.filter(p => p.id !== id);
+  renderProducts();
+  recalculate();
+  updatePreview();
+}
+
+function renderProducts() {
+  const list = document.getElementById('product-list');
+  list.innerHTML = products.map((p, i) => `
+    <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; position: relative;">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-xs font-bold text-green-700">Item #${i+1}</span>
+        ${products.length > 1 ? `<button class="btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="removeProduct(${p.id})">Remove</button>` : ''}
+      </div>
+      <div class="grid grid-cols-1 gap-3">
+        
+        <!-- Mango Variety Select -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="new-label">Mango Variety (আমের জাত)</label>
+            <div class="new-select-wrapper">
+              <select id="mangotype-${p.id}" class="new-select" onchange="updateProduct(${p.id}, 'mangoType', this.value)">
+                ${MANGO_TYPES.map(t => `<option value="${t}" ${p.mangoType===t?'selected':''}>${t}</option>`).join('')}
+              </select>
+              <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <!-- Select Preset Package -->
+          <div>
+            <label class="new-label">Package Select (প্যাকেজ)</label>
+            <div class="new-select-wrapper">
+              <select id="package-${p.id}" class="new-select" onchange="handlePackageSelectChange(${p.id}, this.value)">
+                ${PRESET_PACKAGES.map(pkg => `<option value="${pkg.id}" ${p.packageId===pkg.id?'selected':''}>${pkg.text}</option>`).join('')}
+              </select>
+              <svg class="new-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div id="custom-mango-div-${p.id}" class="${p.mangoType === 'Custom' ? '' : 'hidden'}">
+          <label class="new-label">Custom Mango Variety Name</label>
+          <input type="text" id="custom-name-input-${p.id}" class="new-input" placeholder="Type variety name..." value="${p.customMangoType||''}" oninput="updateProduct(${p.id}, 'customMangoType', this.value)">
+        </div>
+
+        <!-- Inputs: Weight, Rate, Discount %, Total -->
+        <div class="grid grid-cols-4 gap-2">
+          <div>
+            <label class="new-label">Weight (KG)</label>
+            <input type="number" id="weight-${p.id}" step="0.01" min="0" class="new-input ${p.packageId !== 'custom' ? 'bg-gray-100 cursor-not-allowed' : ''}" 
+              placeholder="0.00" value="${p.weight || ''}" ${p.packageId !== 'custom' ? 'readonly' : ''} 
+              oninput="updateProduct(${p.id}, 'weight', this.value)">
+          </div>
+          <div>
+            <label class="new-label">Rate / KG (৳)</label>
+            <input type="number" id="rate-${p.id}" min="0" class="new-input ${p.packageId !== 'custom' ? 'bg-gray-100 cursor-not-allowed' : ''}" 
+              placeholder="0" value="${p.rate ? Math.round(p.rate) : ''}" ${p.packageId !== 'custom' ? 'readonly' : ''} 
+              oninput="updateProduct(${p.id}, 'rate', this.value)">
+          </div>
+          <div>
+            <label class="new-label">Discount (%)</label>
+            <input type="number" id="discount-${p.id}" min="0" max="100" class="new-input border-amber-400" 
+              placeholder="0%" value="${p.discountPercent || ''}" 
+              oninput="updateProduct(${p.id}, 'discountPercent', this.value)">
+          </div>
+          <div>
+            <label class="new-label">Total (৳)</label>
+            <input type="text" id="total-${p.id}" readonly value="${p.total ? p.total.toFixed(2) : '0.00'}" class="new-input readonly-box font-bold text-green-700 bg-green-50 border-green-200">
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function handlePackageSelectChange(productId, packageId) {
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  
+  p.packageId = packageId;
+  const pkg = PRESET_PACKAGES.find(x => x.id === packageId);
+  if (pkg && packageId !== 'custom') {
+    p.weight = pkg.weight;
+    p.rate = pkg.rate;
+  } else if (packageId === 'custom') {
+    p.weight = 0;
+    p.rate = 0;
+  }
+  
+  // Directly Update values and states in the DOM without fully re-rendering
+  const weightInput = document.getElementById(`weight-${productId}`);
+  const rateInput = document.getElementById(`rate-${productId}`);
+  
+  if (weightInput) {
+    weightInput.value = p.weight ? p.weight : '';
+    if (packageId !== 'custom') {
+      weightInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+      weightInput.setAttribute('readonly', 'true');
+    } else {
+      weightInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+      weightInput.removeAttribute('readonly');
+    }
+  }
+  if (rateInput) {
+    rateInput.value = p.rate ? Math.round(p.rate) : '';
+    if (packageId !== 'custom') {
+      rateInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+      rateInput.setAttribute('readonly', 'true');
+    } else {
+      rateInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+      rateInput.removeAttribute('readonly');
+    }
+  }
+
+  updateProduct(productId, 'packageId', packageId);
+}
+
+function updateProduct(id, field, value) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  
+  if (field === 'weight') {
+    p.weight = parseFloat(value) || 0;
+  } else if (field === 'rate') {
+    p.rate = parseFloat(value) || 0;
+  } else if (field === 'discountPercent') {
+    p.discountPercent = parseFloat(value) || 0;
+  } else {
+    p[field] = value;
+  }
+
+  // Calculate row total: Total = (Weight * Rate) * (1 - Discount%/100)
+  const weightVal = parseFloat(p.weight) || 0;
+  const rateVal = parseFloat(p.rate) || 0;
+  const discVal = parseFloat(p.discountPercent) || 0;
+  
+  const basePrice = weightVal * rateVal;
+  p.total = basePrice * (1 - (discVal / 100));
+
+  // Directly update row total field in UI to preserve focus
+  const totalInput = document.getElementById(`total-${id}`);
+  if (totalInput) {
+    totalInput.value = p.total ? p.total.toFixed(2) : '0.00';
+  }
+
+  // Toggle Visibility of Custom Variety Div without completely re-rendering the list
+  if (field === 'mangoType') {
+    const customDiv = document.getElementById(`custom-mango-div-${id}`);
+    if (customDiv) {
+      customDiv.classList.toggle('hidden', value !== 'Custom');
+    }
+  }
+
+  recalculate();
+  updatePreview();
+}
+
+// ============================================================
+// CALCULATIONS
+// ============================================================
+function recalculate() {
+  const subtotal = products.reduce((s, p) => s + (p.total || 0), 0);
+  const deliveryFee = parseFloat(document.getElementById('manual-del-fee').value) || 0;
+  const globalDiscount = parseFloat(document.getElementById('extra-discount').value) || 0;
+  const advance = parseFloat(document.getElementById('advance-paid').value) || 0;
+  
+  const total = subtotal + deliveryFee - globalDiscount;
+  const net = total - advance;
+
+  document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
+  document.getElementById('calc-delivery').textContent = deliveryFee.toFixed(2);
+  document.getElementById('calc-discount-show').textContent = globalDiscount.toFixed(2);
+  document.getElementById('calc-advance-show').textContent = advance.toFixed(2);
+  document.getElementById('calc-net').textContent = net.toFixed(2);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ============================================================
+// INVOICE PREVIEW GENERATOR
+// ============================================================
+function generateInvoiceHTML() {
+  const invId = document.getElementById('inv-id').value || 'INV-0001';
+  const invDate = formatDate(document.getElementById('inv-date').value);
+  
+  const companyName = document.getElementById('company-name').value || "Father's food";
+  const companyPhone = document.getElementById('company-phone').value || '';
+  const companyEmail = document.getElementById('company-email').value || '';
+  const companyBkash = document.getElementById('company-bkash').value || '';
+  const companyAddress = document.getElementById('company-address').value || '';
+  
+  const custName = document.getElementById('cust-name').value || '—';
+  const custPhone = document.getElementById('cust-phone').value || '—';
+  const custArea = document.getElementById('cust-area').value || '';
+  const custAddress = document.getElementById('cust-address').value || '—';
+  const custNote = document.getElementById('cust-note').value || '';
+  
+  const courier = document.getElementById('courier').value || '—';
+  const deliveryType = document.getElementById('delivery-type').value || '—';
+  const deliveryDate = formatDate(document.getElementById('delivery-date').value);
+  const deliveryFee = parseFloat(document.getElementById('manual-del-fee').value) || 0;
+  
+  const orderStatus = document.getElementById('order-status').value;
+  const payStatus = document.getElementById('payment-status').value;
+  const terms = document.getElementById('terms-text').value || '';
+  const globalDiscount = parseFloat(document.getElementById('extra-discount').value) || 0;
+  const advance = parseFloat(document.getElementById('advance-paid').value) || 0;
+
+  const subtotal = products.reduce((s, p) => s + (p.total || 0), 0);
+  const net = subtotal + deliveryFee - globalDiscount - advance;
+
+  const payClass = payStatus === 'Paid' ? 'status-paid' : payStatus === 'Partial' ? 'status-partial' : 'status-unpaid';
+  const ordClass = orderStatus === 'Delivered' ? 'status-delivered' : orderStatus === 'Processing' ? 'status-processing' : 'status-pending';
+
+  const SVG_PHONE = `<svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+  const SVG_EMAIL = `<svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`;
+  const SVG_CARD = `<svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`;
+  const SVG_LOC = `<svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+  const SVG_USER = `<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+  const SVG_TRUCK = `<svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`;
+
+  const logoBlock = uploadedLogoSrc 
+    ? `<div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+         <img src="${uploadedLogoSrc}" style="width:90px;height:90px;object-fit:contain;border-radius:8px;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;">
+         <div style="display:flex;flex-direction:column;justify-content:center;">
+           <div class="inv-company-name">${companyName}</div>
+           <div class="inv-company-details" style="display:flex;flex-direction:column;gap:4px;">
+             ${companyPhone ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_PHONE} <span>${companyPhone}</span></div>` : ''}
+             ${companyEmail ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_EMAIL} <span>${companyEmail}</span></div>` : ''}
+             ${companyBkash ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_CARD} <span>bKash/Nagad: ${companyBkash}</span></div>` : ''}
+             ${companyAddress ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_LOC} <span>${companyAddress}</span></div>` : ''}
+           </div>
+         </div>
+       </div>`
+    : `<div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+         <div style="width:90px;height:90px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+           <svg style="width:36px;height:36px;stroke:white;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+         </div>
+         <div style="display:flex;flex-direction:column;justify-content:center;">
+           <div class="inv-company-name">${companyName}</div>
+           <div class="inv-company-details" style="display:flex;flex-direction:column;gap:4px;">
+             ${companyPhone ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_PHONE} <span>${companyPhone}</span></div>` : ''}
+             ${companyEmail ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_EMAIL} <span>${companyEmail}</span></div>` : ''}
+             ${companyBkash ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_CARD} <span>bKash/Nagad: ${companyBkash}</span></div>` : ''}
+             ${companyAddress ? `<div style="display:flex;align-items:center;gap:6px;">${SVG_LOC} <span>${companyAddress}</span></div>` : ''}
+           </div>
+         </div>
+       </div>`;
+
+  const productRows = products.map((p, i) => {
+    const mangoName = p.mangoType === 'Custom' ? (p.customMangoType || 'Custom Variety') : p.mangoType;
+    const pkg = PRESET_PACKAGES.find(x => x.id === p.packageId);
+    const displayPackageName = pkg ? (pkg.id === 'custom' ? mangoName : `${mangoName} (${pkg.name})`) : mangoName;
+    const itemDiscountStr = p.discountPercent > 0 ? `${p.discountPercent}%` : '—';
+    const finalRate = p.rate ? Math.round(p.rate) : 0;
+
+    return `
+      <tr>
+        <td style="font-weight:600; color:#57534E;">${i+1}</td>
+        <td style="font-weight:700; color:#14532D;">${displayPackageName}</td>
+        <td style="text-align:right;">${parseFloat(p.weight||0).toFixed(2)} KG</td>
+        <td style="text-align:right;">৳ ${finalRate}</td>
+        <td style="text-align:right; color:#D97706; font-weight:600;">${itemDiscountStr}</td>
+        <td style="text-align:right; font-weight:700; color:#166534;">৳ ${(p.total||0).toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+  <div style="background:white; width:210mm; min-height:297mm; font-family:'DM Sans', 'Noto Sans Bengali', sans-serif; color:#1C1917; position:relative; overflow:hidden;">
+
+    <!-- HEADER (eCommerce Style) -->
+    <div class="inv-header">
+      <div style="width:60%;">
+        ${logoBlock}
+      </div>
+      <div style="width:40%; text-align:right;">
+        <div class="inv-title">INVOICE</div>
+        <div style="font-size:16px; font-weight:700; letter-spacing:1px; margin-bottom:5px; line-height:22px;">${invId}</div>
+        <div style="font-size:13px; opacity:0.9; line-height:18px;">Date: <strong>${invDate}</strong></div>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div style="background:#F0FDF4; padding:10px 40px; display:flex; gap:16px; border-bottom:2px solid #DCFCE7; align-items:center;">
+      <span style="font-size:11px; color:#6B7280; font-weight:700; text-transform:uppercase; line-height:16px;">Payment:</span>
+      <span class="status-badge ${payClass}">${payStatus}</span>
+      <span style="width:1px; height:14px; background:#D1FAE5;"></span>
+      <span style="font-size:11px; color:#6B7280; font-weight:700; text-transform:uppercase; line-height:16px;">Order:</span>
+      <span class="status-badge ${ordClass}">${orderStatus}</span>
+    </div>
+
+    <!-- CUSTOMER + DELIVERY -->
+    <div class="inv-meta-grid">
+      <div class="inv-meta-box">
+        <div class="inv-meta-label">${SVG_USER} <span>Bill To</span></div>
+        <div style="font-size:16px; font-weight:800; color:#14532D; margin-bottom:6px; line-height:22px;">${custName}</div>
+        <div style="font-size:13px; margin-bottom:4px; color:#374151; display:flex; align-items:center; gap:6px; line-height:18px;">${SVG_PHONE} <span>${custPhone}</span></div>
+        <div style="font-size:12px; color:#57534E; display:flex; align-items:flex-start; gap:6px; line-height:18px;">${SVG_LOC} <span>${custAddress}${custArea ? `, ${custArea}` : ''}</span></div>
+        ${custNote ? `<div style="margin-top:8px; background:#FFFBEB; border-left:3px solid #F59E0B; padding:5px 10px; font-size:11px; color:#92400E; font-weight:600; line-height:16px;">${custNote}</div>` : ''}
+      </div>
+      <div class="inv-meta-box" style="border-right:none;">
+        <div class="inv-meta-label">${SVG_TRUCK} <span>Delivery Info</span></div>
+        <div style="font-size:13px; margin-bottom:6px; font-weight:600; display:flex; align-items:center; gap:6px; line-height:18px;">${SVG_TRUCK} <span>Courier: <span style="color:#14532D;">${courier}</span></span></div>
+        <div style="font-size:13px; margin-bottom:6px; color:#374151; line-height:18px;">Type: ${deliveryType}</div>
+        <div style="font-size:13px; color:#374151; line-height:18px;">Est. Delivery: <strong>${deliveryDate}</strong></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TABLE -->
+    <div style="padding:0 40px; margin-top:20px;">
+      <div style="font-size:11px; font-weight:800; color:#16A34A; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; line-height:16px;">Order Items</div>
+      <table class="inv-table" style="width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden;">
+        <thead>
+          <tr>
+            <th style="width:30px;">#</th>
+            <th>Product Name</th>
+            <th style="text-align:right;">Weight</th>
+            <th style="text-align:right;">Rate/KG</th>
+            <th style="text-align:right; width:80px;">Discount</th>
+            <th style="text-align:right; width:110px;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${productRows || '<tr><td colspan="6" style="text-align:center; color:#A8A29E; padding:20px; line-height:20px;">No products added</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAYMENT SUMMARY -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:20px 40px;">
+      <!-- Terms -->
+      <div>
+        <div style="font-size:11px; font-weight:800; color:#16A34A; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; line-height:16px;">Notes & Terms</div>
+        <div style="font-size:11px; color:#57534E; line-height:18px; background:#F9FAFB; border-radius:8px; padding:12px; border-left:3px solid #16A34A; font-family:'Noto Sans Bengali',sans-serif;">
+          ${terms.replace(/\n/g, '<br>')}
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="inv-summary">
+        <div style="font-size:11px; font-weight:800; color:#16A34A; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; line-height:16px;">Payment Summary</div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; line-height:18px; border-bottom:1px dashed #D1FAE5;">
+          <span style="color:#57534E;">Subtotal</span>
+          <span style="font-weight:700;">৳ ${subtotal.toFixed(2)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; line-height:18px; border-bottom:1px dashed #D1FAE5;">
+          <span style="color:#57534E;">Delivery Fee</span>
+          <span style="font-weight:700; color:#1D4ED8;">+ ৳ ${deliveryFee.toFixed(2)}</span>
+        </div>
+        ${globalDiscount > 0 ? `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; line-height:18px; border-bottom:1px dashed #D1FAE5;">
+          <span style="color:#57534E;">Extra Discount</span>
+          <span style="font-weight:700; color:#DC2626;">− ৳ ${globalDiscount.toFixed(2)}</span>
+        </div>` : ''}
+        ${advance > 0 ? `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; line-height:18px; border-bottom:1px dashed #D1FAE5;">
+          <span style="color:#57534E;">Advance Paid</span>
+          <span style="font-weight:700; color:#D97706;">− ৳ ${advance.toFixed(2)}</span>
+        </div>` : ''}
+        
+        <div style="background:linear-gradient(135deg, #14532D, #16A34A); color:white; padding:12px 16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:16px; line-height:24px; margin-top:10px;">
+          <span>Net Payable</span>
+          <span>৳ ${net.toFixed(2)}</span>
+        </div>
+        <div style="text-align:center; margin-top:12px;">
+          <span class="status-badge ${payClass}">${payStatus}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="inv-footer">
+      <span><strong>${companyName}</strong> ${companyPhone ? `| ${companyPhone}` : ''}</span>
+      <span style="opacity:0.8;">Powered by ${companyName}</span>
+      <span style="font-weight:700;">${invId}</span>
+    </div>
+  </div>`;
+}
+
+function updatePreview() {
+  recalculate();
+  const html = generateInvoiceHTML();
+  document.getElementById('invoice-preview').innerHTML = html;
+  const mobilePreview = document.getElementById('invoice-preview-mobile');
+  if (mobilePreview) mobilePreview.innerHTML = html;
+}
+
+// ============================================================
+// PREVIEW SCALING (desktop)
+// ============================================================
+function scalePreview() {
+  const wrap = document.getElementById('preview-scale-wrap');
+  const container = wrap?.parentElement;
+  if (!wrap || !container) return;
+  const containerW = container.clientWidth - 48;
+  const invoiceW = 794; 
+  const scale = Math.min(containerW / invoiceW, 1);
+  wrap.style.transform = `scale(${scale})`;
+  wrap.style.width = `${invoiceW}px`;
+  container.style.height = `${Math.round(1123 * scale + 40)}px`;
+}
+
+// ============================================================
+// MOBILE TABS & PREVIEW
+// ============================================================
+function showTab(tab) {
+  const formPanel = document.getElementById('form-panel');
+  const tabs = document.querySelectorAll('.tab-btn');
+  if (tab === 'form') {
+    formPanel.style.display = 'block';
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+  } else {
+    toggleMobilePreview();
+    tabs[1].classList.add('active');
+    tabs[0].classList.remove('active');
+    setTimeout(() => {
+      tabs[0].classList.add('active');
+      tabs[1].classList.remove('active');
+    }, 300);
+  }
+}
+
+function toggleMobilePreview() {
+  const panel = document.getElementById('mobile-preview-panel');
+  panel.classList.toggle('show');
+  
+  const mobPrev = document.getElementById('invoice-preview-mobile');
+  if (panel.classList.contains('show') && mobPrev) {
+      const sw = window.innerWidth - 40;
+      const sc = Math.min(sw / 794, 1);
+      mobPrev.style.transform = `scale(${sc})`;
+      mobPrev.style.width = '794px';
+      mobPrev.parentElement.style.height = `${1123 * sc + 60}px`;
+  }
+  updatePreview();
+}
+
+// ============================================================
+// EXPORT (CLEAN DOWNLOADS)
+// ============================================================
+function showLoadingToast(msg) {
+  let toast = document.getElementById('dl-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'dl-toast';
+    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#14532D,#16A34A);color:white;padding:12px 24px;border-radius:50px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 8px 24px rgba(20,83,45,0.4);transition:opacity 0.3s;display:flex;align-items:center;gap:10px;';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<svg style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2;animation:spin 1s linear infinite;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> ${msg}`;
+  toast.style.opacity = '1';
+  toast.style.display = 'flex';
+  if (!document.getElementById('spin-style')) {
+    const s = document.createElement('style');
+    s.id = 'spin-style';
+    s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
+  }
+}
+
+function hideLoadingToast() {
+  const toast = document.getElementById('dl-toast');
+  if (toast) { toast.style.opacity = '0'; setTimeout(() => { toast.style.display = 'none'; }, 400); }
+}
+
+async function prepareCanvas() {
+  await document.fonts.ready;
+  
+  const el = document.getElementById('invoice-preview');
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute; top:-9999px; left:-9999px; width:794px; background:#ffffff;';
+  
+  const clone = el.cloneNode(true);
+  clone.style.cssText = 'width:794px; min-height:1123px; margin:0; padding:0; background:#ffffff;';
+  
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+  
+  await new Promise(r => setTimeout(r, 150));
+  return { wrapper, clone };
+}
+
+const getCanvasOptions = () => ({
+  scale: 2, 
+  useCORS: true, 
+  backgroundColor: '#ffffff', 
+  logging: false,
+  scrollY: 0,
+  windowY: 0,
+  onclone: (clonedDoc) => {
+    const style = clonedDoc.createElement('style');
+    style.innerHTML = `
+      .inv-title { transform: translateY(-4px) !important; }
+      .inv-company-name { transform: translateY(-3px) !important; }
+      .inv-header > div > div > div { transform: translateY(-2px) !important; }
+      .inv-meta-box > div { transform: translateY(-1.5px) !important; }
+      .inv-summary > div { transform: translateY(-1.5px) !important; }
+      .inv-footer > span { transform: translateY(-2px) !important; }
+      .status-badge { transform: translateY(-1px) !important; }
+      .inv-table th { padding-top: 8px !important; padding-bottom: 16px !important; }
+      .inv-table td { padding-top: 8px !important; padding-bottom: 16px !important; }
+      svg { transform: translateY(1.5px) !important; }
+    `;
+    clonedDoc.head.appendChild(style);
+  }
+});
+
+async function downloadPNG() {
+  showLoadingToast('Generating PNG...');
+  try {
+    const { wrapper, clone } = await prepareCanvas();
+    const canvas = await html2canvas(clone, getCanvasOptions());
+    
+    const link = document.createElement('a');
+    link.download = `${document.getElementById('inv-id').value || 'Invoice'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    document.body.removeChild(wrapper);
+  } catch (err) {
+    console.error("Error generating PNG: ", err);
+  } finally {
+    hideLoadingToast();
+  }
+}
+
+async function downloadPDF() {
+  showLoadingToast('Generating PDF...');
+  try {
+    const { wrapper, clone } = await prepareCanvas();
+    const canvas = await html2canvas(clone, getCanvasOptions());
+    const imgData = canvas.toDataURL('image/png');
+    
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save(`${document.getElementById('inv-id').value || 'Invoice'}.pdf`);
+    
+    document.body.removeChild(wrapper);
+  } catch (err) {
+    console.error("Error generating PDF: ", err);
+  } finally {
+    hideLoadingToast();
+  }
+}
+
+function saveInvoice() {
+  const data = {
+    invId: document.getElementById('inv-id').value,
+    invDate: document.getElementById('inv-date').value,
+    companyName: document.getElementById('company-name').value,
+    companyPhone: document.getElementById('company-phone').value,
+    companyEmail: document.getElementById('company-email').value,
+    companyBkash: document.getElementById('company-bkash').value,
+    companyAddress: document.getElementById('company-address').value,
+    custName: document.getElementById('cust-name').value,
+    custPhone: document.getElementById('cust-phone').value,
+    custArea: document.getElementById('cust-area').value,
+    custAddress: document.getElementById('cust-address').value,
+    custNote: document.getElementById('cust-note').value,
+    courier: document.getElementById('courier').value,
+    deliveryType: document.getElementById('delivery-type').value,
+    deliveryDate: document.getElementById('delivery-date').value,
+    deliveryFee: document.getElementById('manual-del-fee').value,
+    discount: document.getElementById('extra-discount').value,
+    advance: document.getElementById('advance-paid').value,
+    payStatus: document.getElementById('payment-status').value,
+    orderStatus: document.getElementById('order-status').value,
+    terms: document.getElementById('terms-text').value,
+    products: products
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${data.invId || 'Invoice'}.json`;
+  link.click();
+  showLoadingToast('Invoice saved! ✓');
+  setTimeout(hideLoadingToast, 2000);
+}
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .then(() => console.log("PWA: SW registered ✓"))
+        .catch(err => console.log("PWA: SW error", err));
+    });
+  }
+</script>
+</body>
+</html>
